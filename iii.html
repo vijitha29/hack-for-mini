@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeneScope with Volcano Plot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --light-gray: #ecf0f1;
+            --dark-gray: #7f8c8d;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .disease-form {
+            flex: 1;
+            min-width: 300px;
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        .disease-form h2 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--light-gray);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .disease-results {
+            margin-bottom: 20px;
+        }
+
+        .disease-results h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .result-item:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 30px;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .input-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GeneScope</h1>
+            <p class="subtitle">Analyze Alzheimer's and Parkinson's disease biomarkers with Volcano Plot</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div class="disease-form" id="alzheimer-form">
+                    <h2>Alzheimer's Disease Markers</h2>
+                    <div class="form-group">
+                        <label for="apoe_e4">APOE ɛ4 allele frequency (0-1):</label>
+                        <input type="number" id="apoe_e4" step="0.01" min="0" max="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apoe_e2">APOE ɛ2 allele frequency (0-1):</label>
+                        <input type="number" id="apoe_e2" step="0.01" min="0" max="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="psen1">PSEN1 amyloid beta (pg/mL):</label>
+                        <input type="number" id="psen1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="app">APP amyloid beta (pg/mL):</label>
+                        <input type="number" id="app" required>
+                    </div>
+                </div>
+
+                <div class="disease-form" id="parkinson-form">
+                    <h2>Parkinson's Disease Markers</h2>
+                    <div class="form-group">
+                        <label for="snca">SNCA Lewy body count:</label>
+                        <input type="number" id="snca" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lrrk2">LRRK2 kinase activity (units):</label>
+                        <input type="number" id="lrrk2" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="park2">PARK2 parkin production (% normal):</label>
+                        <input type="number" id="park2" required>
+                    </div>
+                </div>
+            </div>
+
+            <button id="analyze-btn">Analyze Biomarkers</button>
+
+            <div class="results-section" id="results">
+                <!-- Results will be inserted here by JavaScript -->
+            </div>
+
+            <div class="chart-container">
+                <canvas id="volcanoPlot"></canvas>
+            </div>
+        </main>
+
+        <footer>
+            <p>For research purposes only. Not for clinical diagnosis.</p>
+        </footer>
+    </div>
+
+    <script>
+        class NeurodegenerativeAnalyzer {
+            constructor() {
+                this.biological_references = {
+                    APOE: {
+                        'ɛ4': { risk: 0.2, protective: 0.05 },
+                        'ɛ2': { risk: 0.1, protective: 0.15 }
+                    },
+                    AmyloidBeta: {
+                        PSEN1: { normal: [50, 150], elevated: [150, 300] },
+                        APP: { normal: [100, 200], elevated: [200, 400] }
+                    },
+                    LewyBodies: {
+                        SNCA: { normal: [0, 5], moderate: [5, 15], high: [15, 30] }
+                    },
+                    KinaseActivity: {
+                        LRRK2: { normal: [0.1, 0.5], elevated: [0.5, 1.0] }
+                    },
+                    ParkinProduction: {
+                        PARK2: { normal: [80, 120], low: [40, 80], very_low: [0, 40] }
+                    }
+                };
+                this.volcanoData = [];
+                this.volcanoChart = null;
+            }
+
+            analyzeAlzheimer(apoe_e4, apoe_e2, psen1, app) {
+                const results = [];
+                
+                const apoeResult = this._analyzeApoe(apoe_e4, apoe_e2);
+                results.push(`APOE genetic profile: ${apoeResult}`);
+                
+                const amyloidResult = this._analyzeAmyloid(psen1, app);
+                results.push(`Amyloid beta pathology: ${amyloidResult}`);
+                
+                const biologicalRisk = this._calculateAlzheimerRisk(apoeResult, amyloidResult);
+                results.push(`<strong>Biological Conclusion:</strong> ${biologicalRisk}`);
+                
+                // Add data for volcano plot
+                this.volcanoData.push({
+                    biomarker: 'APOE ε4',
+                    foldChange: apoe_e4 * 2, // Example transformation
+                    pValue: this._calculatePValue(apoe_e4),
+                    color: apoe_e4 > 0.3 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                this.volcanoData.push({
+                    biomarker: 'PSEN1',
+                    foldChange: (psen1 - 100) / 50, // Example transformation
+                    pValue: this._calculatePValue(psen1 / 100),
+                    color: psen1 > 150 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                this.volcanoData.push({
+                    biomarker: 'APP',
+                    foldChange: (app - 150) / 50, // Example transformation
+                    pValue: this._calculatePValue(app / 150),
+                    color: app > 200 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                return results;
+            }
+
+            analyzeParkinson(snca, lrrk2, park2) {
+                const results = [];
+                
+                const lewyResult = this._analyzeLewyBodies(snca);
+                results.push(`Lewy bodies burden: ${lewyResult}`);
+                
+                const kinaseResult = this._analyzeKinase(lrrk2);
+                results.push(`Kinase activity: ${kinaseResult}`);
+                
+                const parkinResult = this._analyzeParkin(park2);
+                results.push(`Parkin production: ${parkinResult}`);
+                
+                const biologicalRisk = this._calculateParkinsonRisk(lewyResult, kinaseResult, parkinResult);
+                results.push(`<strong>Biological Conclusion:</strong> ${biologicalRisk}`);
+                
+                // Add data for volcano plot
+                this.volcanoData.push({
+                    biomarker: 'SNCA',
+                    foldChange: snca / 5, // Example transformation
+                    pValue: this._calculatePValue(snca / 10),
+                    color: snca > 10 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                this.volcanoData.push({
+                    biomarker: 'LRRK2',
+                    foldChange: lrrk2 * 2, // Example transformation
+                    pValue: this._calculatePValue(lrrk2),
+                    color: lrrk2 > 0.5 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                this.volcanoData.push({
+                    biomarker: 'PARK2',
+                    foldChange: (100 - park2) / 20, // Example transformation
+                    pValue: this._calculatePValue(park2 / 100),
+                    color: park2 < 60 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'
+                });
+                
+                return results;
+            }
+
+            _calculatePValue(value) {
+                // Simple p-value simulation for demonstration
+                return Math.min(0.0001 + Math.abs(value - 1) * 0.1, 0.99);
+            }
+
+            createVolcanoPlot() {
+                const ctx = document.getElementById('volcanoPlot').getContext('2d');
+                
+                if (this.volcanoChart) {
+                    this.volcanoChart.destroy();
+                }
+                
+                const transformedData = this.volcanoData.map(item => ({
+                    x: item.foldChange,
+                    y: -Math.log10(item.pValue),
+                    biomarker: item.biomarker,
+                    color: item.color
+                }));
+                
+                this.volcanoChart = new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Biomarkers',
+                            data: transformedData,
+                            backgroundColor: transformedData.map(item => item.color),
+                            borderColor: 'rgba(0, 0, 0, 0.5)',
+                            borderWidth: 1,
+                            pointRadius: 8,
+                            pointHoverRadius: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Fold Change (log2)'
+                                },
+                                min: -3,
+                                max: 3
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: '-log10(p-value)'
+                                },
+                                min: 0,
+                                max: 5
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.raw.biomarker + 
+                                               ` (FC: ${context.raw.x.toFixed(2)}, ` +
+                                               `p: ${Math.pow(10, -context.raw.y).toExponential(2)})`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            _analyzeApoe(e4, e2) {
+                const riskScore = (e4 * this.biological_references.APOE['ɛ4'].risk - 
+                                 e2 * this.biological_references.APOE['ɛ2'].protective);
+                
+                if (riskScore > 0.15) return "High genetic risk (APOE-ɛ4 dominant)";
+                if (riskScore < 0) return "Potentially protective (APOE-ɛ2 dominant)";
+                return "Intermediate genetic risk";
+            }
+
+            _analyzeAmyloid(psen1, app) {
+                const psen1Level = psen1 >= this.biological_references.AmyloidBeta.PSEN1.normal[0] && 
+                                  psen1 <= this.biological_references.AmyloidBeta.PSEN1.normal[1] ? "normal" : "elevated";
+                const appLevel = app >= this.biological_references.AmyloidBeta.APP.normal[0] && 
+                                app <= this.biological_references.AmyloidBeta.APP.normal[1] ? "normal" : "elevated";
+                
+                if (psen1Level === "elevated" && appLevel === "elevated") return "Significant amyloid pathology";
+                if (psen1Level === "elevated" || appLevel === "elevated") return "Moderate amyloid pathology";
+                return "Normal amyloid levels";
+            }
+
+            _analyzeLewyBodies(snca) {
+                if (snca <= this.biological_references.LewyBodies.SNCA.normal[1]) return "Normal Lewy body count";
+                if (snca <= this.biological_references.LewyBodies.SNCA.moderate[1]) return "Moderate Lewy body accumulation";
+                return "High Lewy body pathology";
+            }
+
+            _analyzeKinase(lrrk2) {
+                if (lrrk2 <= this.biological_references.KinaseActivity.LRRK2.normal[1]) return "Normal kinase activity";
+                return "Elevated kinase activity (potential pathogenic)";
+            }
+
+            _analyzeParkin(park2) {
+                if (park2 >= this.biological_references.ParkinProduction.PARK2.normal[0]) return "Normal parkin production";
+                if (park2 >= this.biological_references.ParkinProduction.PARK2.low[0]) return "Reduced parkin production";
+                return "Severely deficient parkin";
+            }
+
+            _calculateAlzheimerRisk(apoeResult, amyloidResult) {
+                let riskFactors = 0;
+                if (apoeResult.includes("High genetic risk")) riskFactors += 2;
+                else if (apoeResult.includes("Intermediate")) riskFactors += 1;
+                    
+                if (amyloidResult.includes("Significant amyloid")) riskFactors += 2;
+                else if (amyloidResult.includes("Moderate amyloid")) riskFactors += 1;
+                    
+                if (riskFactors >= 3) return "High probability of Alzheimer's pathology";
+                if (riskFactors >= 1) return "Moderate biological risk factors present";
+                return "Low biological risk profile";
+            }
+
+            _calculateParkinsonRisk(lewyResult, kinaseResult, parkinResult) {
+                let riskFactors = 0;
+                if (lewyResult.includes("High Lewy body")) riskFactors += 2;
+                else if (lewyResult.includes("Moderate Lewy body")) riskFactors += 1;
+                    
+                if (kinaseResult.includes("Elevated")) riskFactors += 1;
+                    
+                if (parkinResult.includes("Severely deficient")) riskFactors += 2;
+                else if (parkinResult.includes("Reduced")) riskFactors += 1;
+                    
+                if (riskFactors >= 3) return "High biological likelihood of Parkinson's pathology";
+                if (riskFactors >= 1) return "Some biological risk factors present";
+                return "Low biological risk profile";
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const resultsSection = document.getElementById('results');
+            const analyzer = new NeurodegenerativeAnalyzer();
+            
+            analyzeBtn.addEventListener('click', () => {
+                // Get input values
+                const apoe_e4 = parseFloat(document.getElementById('apoe_e4').value);
+                const apoe_e2 = parseFloat(document.getElementById('apoe_e2').value);
+                const psen1 = parseFloat(document.getElementById('psen1').value);
+                const app = parseFloat(document.getElementById('app').value);
+                const snca = parseInt(document.getElementById('snca').value);
+                const lrrk2 = parseFloat(document.getElementById('lrrk2').value);
+                const park2 = parseFloat(document.getElementById('park2').value);
+                
+                // Validate inputs
+                if (isNaN(apoe_e4) || isNaN(apoe_e2) || isNaN(psen1) || 
+                    isNaN(app) || isNaN(snca) || isNaN(lrrk2) || isNaN(park2)) {
+                    alert("Please fill in all fields with valid numbers");
+                    return;
+                }
+                
+                // Clear previous volcano data
+                analyzer.volcanoData = [];
+                
+                // Analyze
+                const alzheimerResults = analyzer.analyzeAlzheimer(apoe_e4, apoe_e2, psen1, app);
+                const parkinsonResults = analyzer.analyzeParkinson(snca, lrrk2, park2);
+                
+                // Display results
+                resultsSection.innerHTML = `
+                    <div class="disease-results">
+                        <h3>Alzheimer's Disease Assessment</h3>
+                        ${alzheimerResults.map(result => `<p class="result-item">${result}</p>`).join('')}
+                    </div>
+                    <div class="disease-results">
+                        <h3>Parkinson's Disease Assessment</h3>
+                        ${parkinsonResults.map(result => `<p class="result-item">${result}</p>`).join('')}
+                    </div>
+                `;
+                
+                // Create volcano plot
+                analyzer.createVolcanoPlot();
+                
+                resultsSection.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
